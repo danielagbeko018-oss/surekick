@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SureKick Match Finder (Free)</title>
+<style>
+:root{
+  color-scheme: light dark;
+  --bg:#F2F4EF; --surface:#FFFFFF; --ink:#16231B; --muted:#5B6B61; --line:#C3CFC6;
+  --green:#1E7B4B; --yellow:#E8B800; --red:#C93A32; --grey:#7A867E; --warn:#8A6A00;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1812; --surface:#15231B; --ink:#E6EEE8; --muted:#97A89D; --line:#2A3C31;
+    --green:#4CC38A; --yellow:#F0C93A; --red:#EE6A60; --grey:#7D8C83; --warn:#F0C93A;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:680px;margin:0 auto;padding:18px 14px 70px}
+h1{font:700 27px/1.15 Georgia,"Times New Roman",serif;margin:0 0 4px}
+h2{font:700 18px/1.2 Georgia,"Times New Roman",serif;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 6px;font-size:14px}
+.panel{background:var(--surface);border:1.5px solid var(--line);border-radius:5px;padding:14px;margin:14px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.two:last-child{margin-bottom:0}
+label{display:block;font-weight:600;font-size:14px;margin:0 0 4px}
+input[type=text],input[type=number],textarea,select{width:100%;font:16px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:4px;padding:9px 10px}
+select{font-family:system-ui,sans-serif;padding:9px 6px}
+textarea{min-height:66px;resize:vertical}
+input.bad{border-color:var(--red)}
+.field{margin:0 0 12px}
+.field:last-child{margin-bottom:0}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px;margin-top:3px}
+.news{display:grid;grid-template-columns:1fr 112px;gap:8px 10px;align-items:center}
+.news span{font-size:15px}
+.odds{display:grid;grid-template-columns:1fr 84px 84px;gap:6px;align-items:center}
+.odds .h{font-size:12px;color:var(--muted)}
+.odds span{font-size:14px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+button{font:600 16px/1 system-ui,sans-serif;min-height:44px;padding:0 16px;border-radius:4px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--bg)}
+button.small{min-height:36px;padding:0 12px;font-size:14px}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.link{background:none;border:none;color:var(--muted);text-decoration:underline;min-height:44px;padding:0 4px;font-weight:400;font-size:14px}
+.rc{display:inline-block;width:14px;height:20px;border-radius:2px;transform:rotate(-8deg);flex:none}
+.rc.g{background:var(--green)}.rc.y{background:var(--yellow)}.rc.r{background:var(--red)}.rc.n{background:var(--grey)}
+.banner{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--ink);border-radius:5px;background:var(--surface);padding:14px;margin:14px 0}
+.banner .rc{width:20px;height:28px;margin-top:3px}
+.banner h2{margin:0 0 4px}
+.banner p{margin:0 0 4px;font-size:15px}
+.banner ul{margin:6px 0 0;padding-left:18px;font-size:14px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:0 0 6px}
+details.market,details.plain{background:var(--surface);border:1.5px solid var(--line);border-radius:5px;margin:10px 0}
+details.market summary,details.plain summary{list-style:none;display:flex;gap:10px;align-items:center;padding:12px 14px;cursor:pointer}
+details summary::-webkit-details-marker{display:none}
+.mname{font-weight:700;flex:1}
+.mstat{font-size:14px;color:var(--muted);text-align:right}
+.pick{padding:0 14px 4px;font-weight:600}
+.why{padding:0 14px 8px;font-size:14px}
+.oddsline{padding:0 14px 8px;font-size:14px;color:var(--muted)}
+.rows{padding:0 14px 12px}
+.row{display:grid;grid-template-columns:20px 1fr auto;gap:8px;font-size:14px;padding:5px 0;border-top:1px solid var(--line)}
+.row .ic{font-weight:700;text-align:center}
+.row .ok{color:var(--green)}.row .no{color:var(--red)}.row .wr{color:var(--warn)}.row .in{color:var(--muted)}
+.row .val{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.row .req{color:var(--muted);font-size:12px;display:block}
+.inner{padding:0 14px 14px}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 4px;border-top:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);border-top:none}
+.entry{border-top:1px solid var(--line);padding:10px 0}
+.entry:first-child{border-top:none}
+.entry .top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+.tag{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:3px;padding:2px 6px}
+.tag .rc{width:8px;height:12px}
+.setrow{display:flex;gap:8px;align-items:center}
+.setrow input{max-width:110px}
+.empty{color:var(--muted);font-size:14px}
+#fstatus{list-style:none;padding:0;margin:10px 0 0;font-size:14px}
+#fstatus li{padding:3px 0}
+#fstatus .ok{color:var(--green)}#fstatus .bad{color:var(--red)}#fstatus .warn{color:var(--warn)}#fstatus .run{color:var(--muted)}
+.fl{font-size:13px;font-variant-numeric:tabular-nums}
+.fl div{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--line)}
+.fl div span:first-child{color:var(--muted)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SureKick Match Finder</h1>
+  <p class="sub">Pick an upcoming match and it pulls results from the free football-data.org service, then screens all ten markets with Rulebook v2.0. It does not use Claude, so it has no daily limit. Screening is not a guarantee, and it does not tell you whether a bet has value.</p>
+
+  <div class="panel">
+    <h2>Find a match</h2>
+    <p class="note">Covers 12 competitions on the free plan. Found results fill the boxes below. Check them, fix anything wrong, then press Analyze match again.</p>
+    <div class="field">
+      <label for="apiKey">football-data.org API key</label>
+      <input type="text" id="apiKey" placeholder="Paste your free key" autocomplete="off" spellcheck="false">
+      <div class="meta"><span>Get a free key at football-data.org/client/register. It stays in this browser.</span></div>
+    </div>
+    <div class="two">
+      <div><label for="compSel">Competition</label><select id="compSel"></select></div>
+      <div><label>&nbsp;</label><button class="small" id="loadFx" style="width:100%">Show upcoming matches</button></div>
+    </div>
+    <div class="field" id="fxWrap" hidden>
+      <label for="fxSel">Match</label>
+      <select id="fxSel"></select>
+    </div>
+    <div class="btns" style="margin-top:4px"><button class="primary" id="find" disabled>Find data and analyze</button></div>
+    <ul id="fstatus"></ul>
+    <div id="fdata"></div>
+    <details style="margin-top:10px">
+      <summary style="cursor:pointer;font-size:14px;color:var(--muted)">Advanced: proxy address</summary>
+      <p class="note" style="margin-top:8px">Only needed if your browser blocks the direct connection. Leave empty to connect directly.</p>
+      <input type="text" id="proxy" placeholder="https://your-proxy.example.com/v4" autocomplete="off" spellcheck="false">
+    </details>
+  </div>
+
+  <div class="panel">
+    <div class="two">
+      <div><label for="homeName">Home team</label><input type="text" id="homeName" placeholder="Home team"></div>
+      <div><label for="awayName">Away team</label><input type="text" id="awayName" placeholder="Away team"></div>
+    </div>
+    <div class="two">
+      <div><label for="comp">Competition</label><input type="text" id="comp" placeholder="Optional"></div>
+      <div><label for="ko">Kickoff</label><input type="text" id="ko" placeholder="Optional"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Home team results</h2>
+    <div class="field">
+      <label for="hAll">Last 10 matches, all venues</label>
+      <textarea id="hAll" placeholder="2-1, 0-0, 3-2, ..." data-count="cHAll"></textarea>
+      <div class="meta"><span>Most recent first. Home team's goals first.</span><span id="cHAll">0 found</span></div>
+    </div>
+    <div class="field">
+      <label for="hVen">Last 5 to 10 home matches</label>
+      <textarea id="hVen" placeholder="2-1, 3-0, 1-1, ..." data-count="cHVen"></textarea>
+      <div class="meta"><span>Most recent first. Home team's goals first.</span><span id="cHVen">0 found</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Away team results</h2>
+    <div class="field">
+      <label for="aAll">Last 10 matches, all venues</label>
+      <textarea id="aAll" placeholder="1-2, 0-0, 2-2, ..." data-count="cAAll"></textarea>
+      <div class="meta"><span>Most recent first. Away team's goals first.</span><span id="cAAll">0 found</span></div>
+    </div>
+    <div class="field">
+      <label for="aVen">Last 5 to 10 away matches</label>
+      <textarea id="aVen" placeholder="1-2, 0-1, 2-2, ..." data-count="cAVen"></textarea>
+      <div class="meta"><span>Most recent first. Away team's goals first.</span><span id="cAVen">0 found</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Team news and context</h2>
+    <p class="note">Leave on Unknown if you haven't checked. A concern moves passing markets to further investigation.</p>
+    <div class="news">
+      <span>Injuries, suspensions and lineups</span>
+      <select id="n1" aria-label="Injuries, suspensions and lineups"><option value="unknown">Unknown</option><option value="clear">Clear</option><option value="concern">Concern</option></select>
+      <span>Manager change, rest days and fixture load</span>
+      <select id="n2" aria-label="Manager change, rest days and fixture load"><option value="unknown">Unknown</option><option value="clear">Clear</option><option value="concern">Concern</option></select>
+      <span>Opposition strength and match context</span>
+      <select id="n3" aria-label="Opposition strength and match context"><option value="unknown">Unknown</option><option value="clear">Clear</option><option value="concern">Concern</option></select>
+    </div>
+  </div>
+
+  <details class="plain">
+    <summary><strong>Odds (optional)</strong></summary>
+    <div class="inner">
+      <p class="note">Enter decimal odds to see the break-even probability. Add your own probability estimate to compare. The tool never makes up an estimate from past hit rates.</p>
+      <div class="odds" id="oddsRows"></div>
+    </div>
+  </details>
+
+  <div class="btns">
+    <button class="primary" id="go">Analyze match</button>
+    <button id="reset">Clear</button>
+    <button class="link" id="ex">Try an example</button>
+  </div>
+
+  <div id="out"></div>
+
+  <div class="panel" id="logPanel">
+    <h2>Match log</h2>
+    <p class="note">Save each analyzed match, then add the final score. Hit rates update below, with the number of matches beside each. Saved matches stay in this browser on this phone until you delete them. Use Backup to keep a copy or move them to another browser.</p>
+    <div class="btns" style="margin:0 0 10px"><button class="small" id="save" disabled>Save this match to log</button></div>
+    <div id="summary"></div>
+    <div id="log"></div>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-size:14px">Backup and restore</summary>
+      <div style="margin-top:8px">
+        <textarea id="bk" placeholder="Backup text appears here. Paste a saved backup here to restore it."></textarea>
+        <div class="btns" style="margin-top:8px">
+          <button class="small" id="exp">Create backup</button>
+          <button class="small" id="imp">Restore from text</button>
+        </div>
+        <p class="note" id="bkmsg" style="margin-top:6px"></p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const MK=[['o15','Over 1.5 goals'],['o25','Over 2.5 goals'],['u25','Under 2.5 goals'],['by','BTTS Yes'],['bn','BTTS No'],['h','Home win (1)'],['a','Away win (2)'],['x1','Double chance 1X'],['x2','Double chance X2'],['x12','Double chance 12']];
+const CLS={A:'Passes initial screening',B:'Needs further investigation',C:'Fails initial screening',D:'Insufficient data'};
+const CARD={A:'g',B:'y',C:'r',D:'n'};
+const NEWS=['n1','n2','n3'];
+const NEWSLABEL=['Injuries, suspensions and lineups','Manager change, rest days and fixture load','Opposition strength and match context'];
+
+/* ---------- parsing and stats ---------- */
+function parse(t){
+  const out=[]; const re=/(\d+)\s*[-\u2013\u2014:]\s*(\d+)/g; let m;
+  while((m=re.exec(t))){ out.push({f:+m[1],a:+m[2]}); }
+  return out;
+}
+function agg(arr,n){
+  const s=arr.slice(0,n);
+  const r={n:s.length,w:0,d:0,l:0,gf:0,ga:0,o15:0,o25:0,u25:0,by:0,bn:0,sc:0,fts:0,co:0,cs:0,low:0,ub:0,sc2:0};
+  s.forEach(x=>{
+    const t=x.f+x.a;
+    if(x.f>x.a) r.w++; else if(x.f===x.a) r.d++; else r.l++;
+    r.gf+=x.f; r.ga+=x.a;
+    if(t>=2) r.o15++;
+    if(t>=3) r.o25++; else r.u25++;
+    if(x.f>0&&x.a>0) r.by++; else r.bn++;
+    if(x.f>0) r.sc++; else r.fts++;
+    if(x.a>0) r.co++; else r.cs++;
+    if(t<=1) r.low++;
+    if(x.f>=x.a) r.ub++;
+    if(x.f>=2) r.sc2++;
+  });
+  return r;
+}
+
+/* ---------- check builders ---------- */
+// got/n = actual count and sample size; fullN = sample the rule needs. Short sample gives Unknown.
+function chk(label,got,n,op,thr,kind,fullN){
+  let req=(op==='ge'?'need '+thr+' or more':'max '+thr);
+  let pass=null;
+  if(n>=fullN) pass=(op==='ge')?got>=thr:got<=thr;
+  else req+=' (needs '+fullN+' matches)';
+  return {label,text:got+'/'+n,req,pass,kind};
+}
+const info=(label,text)=>({label,text,req:'for your information',pass:null,kind:'info'});
+function vchk(label,t,key,op,t10,t5,kind){
+  return t.v10
+    ? chk(label+', last 10 '+t.v,t.v10[key],10,op,t10,kind,10)
+    : chk(label+', last 5 '+t.v,t.v5[key],5,op,t5,kind,5);
+}
+function gap(t,key){
+  if(t.all.n<10) return null;
+  const V=t.v10||t.v5;
+  const d=Math.abs(t.all[key]/t.all.n-V[key]/V.n);
+  return {label:t.n+': overall vs '+t.v+' rate gap',text:Math.round(d*100)+' pts',req:'under 30 points',pass:d<0.3,kind:'soft'};
+}
+const wdl=s=>s.w+'W '+s.d+'D '+s.l+'L';
+
+function classify(checks,concern){
+  const hard=checks.filter(c=>c.kind==='hard');
+  const fails=hard.filter(c=>c.pass===false).length;
+  const unk=hard.filter(c=>c.pass===null).length;
+  const warn=checks.filter(c=>c.kind==='soft'&&c.pass===false).length;
+  let cls;
+  if(fails>=2) cls='C';
+  else if(fails===1||unk>0) cls='B';
+  else cls=concern?'B':'A';
+  return {cls,fails,unk,warn};
+}
+
+/* ---------- analysis ---------- */
+let last=null;
+
+function analyze(extra){
+  const hn=$('homeName').value.trim()||'Home team';
+  const an=$('awayName').value.trim()||'Away team';
+  const H={all:parse($('hAll').value),ven:parse($('hVen').value)};
+  const A={all:parse($('aAll').value),ven:parse($('aVen').value)};
+  const issues=[];
+  if(H.all.length<5) issues.push(hn+': overall has '+H.all.length+' results, needs at least 5 (10 preferred)');
+  if(A.all.length<5) issues.push(an+': overall has '+A.all.length+' results, needs at least 5 (10 preferred)');
+  if(H.ven.length<5) issues.push(hn+': home has '+H.ven.length+' results, needs at least 5');
+  if(A.ven.length<5) issues.push(an+': away has '+A.ven.length+' results, needs at least 5');
+  const meta={hn,an,comp:$('comp').value.trim(),ko:$('ko').value.trim()};
+  if(issues.length){ last=Object.assign({complete:false,issues},meta); render(true); return; }
+
+  const hAll=agg(H.all,10), aAll=agg(A.all,10);
+  const hV5=agg(H.ven,5), aV5=agg(A.ven,5);
+  const hV10=H.ven.length>=10?agg(H.ven,10):null;
+  const aV10=A.ven.length>=10?agg(A.ven,10):null;
+  const notes=[];
+  (extra||[]).forEach(n=>notes.push(n));
+  if(H.all.length<10) notes.push(hn+' has '+H.all.length+' overall results. The 10-match overall checks show Unknown.');
+  if(A.all.length<10) notes.push(an+' has '+A.all.length+' overall results. The 10-match overall checks show Unknown.');
+  if(!hV10) notes.push(hn+' has under 10 home results, so the five-match home thresholds were used. Five matches is limited evidence.');
+  if(!aV10) notes.push(an+' has under 10 away results, so the five-match away thresholds were used. Five matches is limited evidence.');
+  if(H.all.length>10||A.all.length>10) notes.push('Only the 10 most recent overall results were used.');
+
+  const T=[
+    {n:hn,v:'home',all:hAll,v5:hV5,v10:hV10},
+    {n:an,v:'away',all:aAll,v5:aV5,v10:aV10}
+  ];
+  const each=f=>T.flatMap(f).filter(Boolean);
+  const [h,a]=T;
+  const ck={};
+
+  ck.o15=each(t=>[
+    chk(t.n+': Over 1.5, last 10 overall',t.all.o15,t.all.n,'ge',8,'hard',10),
+    vchk(t.n+': Over 1.5',t,'o15','ge',8,4,'hard'),
+    chk(t.n+': scored, last 5 '+t.v,t.v5.sc,5,'ge',4,'hard',5),
+    chk(t.n+': under 2 goals, last 5 '+t.v,t.v5.low,5,'le',1,'soft',5),
+    gap(t,'o15')
+  ]);
+  ck.o25=each(t=>[
+    chk(t.n+': Over 2.5, last 10 overall',t.all.o25,t.all.n,'ge',6,'hard',10),
+    vchk(t.n+': Over 2.5',t,'o25','ge',6,3,'hard'),
+    chk(t.n+': scored, last 5 '+t.v,t.v5.sc,5,'ge',4,'hard',5),
+    info(t.n+': goals for-against, last 5 '+t.v,t.v5.gf+'-'+t.v5.ga),
+    gap(t,'o25')
+  ]);
+  ck.u25=each(t=>[
+    chk(t.n+': Under 2.5, last 10 overall',t.all.u25,t.all.n,'ge',6,'hard',10),
+    vchk(t.n+': Under 2.5',t,'u25','ge',6,3,'hard'),
+    chk(t.n+': scored 2+ goals, last 5 '+t.v,t.v5.sc2,5,'le',2,'soft',5),
+    info(t.n+': 0-0, 1-0 or 0-1 results, last 5 '+t.v,t.v5.low+'/5'),
+    gap(t,'u25')
+  ]);
+  ck.by=each(t=>[
+    chk(t.n+': BTTS Yes, last 10 overall',t.all.by,t.all.n,'ge',6,'hard',10),
+    vchk(t.n+': BTTS Yes',t,'by','ge',6,3,'hard'),
+    chk(t.n+': scored, last 5 '+t.v,t.v5.sc,5,'ge',4,'hard',5),
+    chk(t.n+': conceded, last 5 '+t.v,t.v5.co,5,'ge',3,'soft',5),
+    info(t.n+': clean sheets, last 5 '+t.v,t.v5.cs+'/5'),
+    gap(t,'by')
+  ]);
+  ck.bn=each(t=>[
+    chk(t.n+': BTTS No, last 10 overall',t.all.bn,t.all.n,'ge',6,'hard',10),
+    vchk(t.n+': BTTS No',t,'bn','ge',6,3,'hard'),
+    info(t.n+': failed to score, last 5 '+t.v,t.v5.fts+'/5'),
+    info(t.n+': clean sheets, last 5 '+t.v,t.v5.cs+'/5'),
+    gap(t,'bn')
+  ]);
+  ck.h=[
+    chk(hn+': wins, last 10 overall',hAll.w,hAll.n,'ge',6,'hard',10),
+    hV10?chk(hn+': wins, last 10 home',hV10.w,10,'ge',6,'hard',10):null,
+    chk(hn+': wins, last 5 home',hV5.w,5,'ge',3,'hard',5),
+    chk(hn+': scored, last 5 home',hV5.sc,5,'ge',4,'hard',5),
+    chk(an+': wins, last 5 away',aV5.w,5,'le',1,'soft',5),
+    chk(hn+': draws, last 5 home',hV5.d,5,'le',2,'soft',5),
+    info(an+': last 10 overall',wdl(aAll)),
+    info(an+': last 5 away, conceded '+aV5.ga,wdl(aV5))
+  ].filter(Boolean);
+  ck.a=[
+    chk(an+': wins, last 10 overall',aAll.w,aAll.n,'ge',6,'hard',10),
+    aV10?chk(an+': wins, last 10 away',aV10.w,10,'ge',6,'hard',10):null,
+    chk(an+': wins, last 5 away',aV5.w,5,'ge',3,'hard',5),
+    chk(an+': scored, last 5 away',aV5.sc,5,'ge',4,'hard',5),
+    chk(hn+': wins, last 5 home',hV5.w,5,'le',1,'soft',5),
+    chk(an+': draws, last 5 away',aV5.d,5,'le',2,'soft',5),
+    info(hn+': last 10 overall',wdl(hAll)),
+    info(hn+': last 5 home, conceded '+hV5.ga,wdl(hV5))
+  ].filter(Boolean);
+  ck.x1=[
+    chk(hn+': unbeaten, last 10 overall',hAll.ub,hAll.n,'ge',7,'hard',10),
+    chk(hn+': unbeaten, last 5 home',hV5.ub,5,'ge',4,'hard',5),
+    hV10?chk(hn+': unbeaten, last 10 home',hV10.ub,10,'ge',7,'soft',10):null,
+    chk(an+': wins, last 5 away',aV5.w,5,'le',2,'soft',5),
+    info(an+': last 10 overall',wdl(aAll)),
+    info(hn+': last 5 home',wdl(hV5))
+  ].filter(Boolean);
+  ck.x2=[
+    chk(an+': unbeaten, last 10 overall',aAll.ub,aAll.n,'ge',7,'hard',10),
+    chk(an+': unbeaten, last 5 away',aV5.ub,5,'ge',4,'hard',5),
+    aV10?chk(an+': unbeaten, last 10 away',aV10.ub,10,'ge',7,'soft',10):null,
+    chk(hn+': wins, last 5 home',hV5.w,5,'le',2,'soft',5),
+    info(hn+': last 10 overall',wdl(hAll)),
+    info(an+': last 5 away',wdl(aV5))
+  ].filter(Boolean);
+  ck.x12=each(t=>[
+    chk(t.n+': draws, last 10 overall',t.all.d,t.all.n,'le',3,'hard',10),
+    t.v10?chk(t.n+': draws, last 10 '+t.v,t.v10.d,10,'le',3,'hard',10)
+         :chk(t.n+': draws, last 5 '+t.v,t.v5.d,5,'le',2,'hard',5)
+  ]).concat([
+    info(hn+': last 5 home',wdl(hV5)),
+    info(an+': last 5 away',wdl(aV5))
+  ]);
+
+  const picks={
+    o15:'Over 1.5 goals',o25:'Over 2.5 goals',u25:'Under 2.5 goals',by:'Both teams to score: Yes',bn:'Both teams to score: No',
+    h:'Home win: '+hn,a:'Away win: '+an,x1:'Home win or draw: '+hn,x2:'Away win or draw: '+an,x12:'Either team wins (no draw)'
+  };
+  const markets=MK.map(([key,name])=>({key,name,pick:picks[key],checks:ck[key]}));
+
+  // table data
+  const hv=agg(H.ven,10), av=agg(A.ven,10);
+  last=Object.assign({complete:true,notes,markets,tbl:{hAll,hv,aAll,av}},meta);
+  render(true);
+}
+
+/* ---------- classification at render time (news can change) ---------- */
+function newsState(){
+  const v=NEWS.map(id=>$(id).value);
+  return {concern:v.includes('concern'),unknown:v.filter(x=>x==='unknown').length};
+}
+function finalize(){
+  const ns=newsState();
+  last.concern=ns.concern; last.newsUnknown=ns.unknown;
+  const L=last.markets;
+  L.forEach(m=>{ Object.assign(m,classify(m.checks,ns.concern)); m.conflict=null; });
+  const by=k=>L.find(m=>m.key===k);
+  [['o25','u25'],['by','bn'],['h','a']].forEach(([x,y])=>{
+    const p=by(x),q=by(y);
+    if(p.cls==='A'&&q.cls==='A'){ p.cls='B'; q.cls='B'; p.conflict=q.name; q.conflict=p.name; }
+  });
+}
+function why(m){
+  const f=m.checks.filter(c=>c.kind==='hard'&&c.pass===false).map(c=>c.label);
+  const u=m.checks.filter(c=>c.kind==='hard'&&c.pass===null);
+  const s=[];
+  if(m.cls==='A') s.push('Every main requirement is met'+(m.warn?', with '+m.warn+(m.warn===1?' warning':' warnings'):'')+'. Continue with team news and odds. This is a screening result, not a guarantee.');
+  if(m.cls==='B'){
+    if(f.length===1) s.push('One main requirement failed: '+f[0]+'.');
+    if(u.length) s.push(u.length+' main '+(u.length===1?'requirement':'requirements')+' could not be checked because the sample is too small.');
+    if(m.conflict) s.push('It conflicts with '+m.conflict+', which also passed, so neither is picked.');
+    if(last.concern) s.push(f.length||u.length||m.conflict?'A team news concern is also flagged.':'The statistics pass, but a team news concern is unresolved.');
+  }
+  if(m.cls==='C') s.push(f.length+' main requirements failed, including: '+f.slice(0,3).join('; ')+'. Normally excluded under this framework.');
+  return s.join(' ');
+}
+function oddsLine(m){
+  const o=parseFloat($('od_'+m.key).value);
+  if(!(o>1)) return '';
+  const be=100/o;
+  let s='Odds '+o.toFixed(2)+', break-even '+be.toFixed(1)+'%. ';
+  const e=parseFloat($('es_'+m.key).value);
+  if(e>0&&e<=100) s+='Your estimate of '+e+'% is '+(e>be?'above':'at or below')+' break-even. Allow for bookmaker margin and uncertainty in your estimate.';
+  else s+='The value check needs your own probability estimate.';
+  return s;
+}
+
+/* ---------- rendering ---------- */
+function bannerHTML(){
+  if(!last.complete){
+    return '<div class="banner"><span class="rc n"></span><div><h2>Insufficient data</h2><p>No classification until every list has at least 5 results.</p><ul>'
+      +last.issues.map(i=>'<li>'+esc(i)+'</li>').join('')+'</ul></div></div>';
+  }
+  const A=last.markets.filter(m=>m.cls==='A');
+  const B=last.markets.filter(m=>m.cls==='B');
+  let sub;
+  if(last.concern) sub='A team news concern is flagged, so passing markets move to further investigation.';
+  else if(last.newsUnknown) sub='Team news is not fully checked ('+last.newsUnknown+' of 3 unresolved). Check before deciding.';
+  else sub='Team news is clear. Passing screening is not a guarantee and not a value assessment.';
+  if(A.length){
+    return '<div class="banner"><span class="rc g"></span><div><h2>Passes initial screening</h2><p>'+esc(A.map(m=>m.pick).join(' | '))+'</p><p class="note">'+sub+'</p>'
+      +(B.length?'<ul><li>Needs further investigation: '+esc(B.map(m=>m.name).join(', '))+'</li></ul>':'')+'</div></div>';
+  }
+  return '<div class="banner"><span class="rc '+(B.length?'y':'r')+'"></span><div><h2>No market passes initial screening</h2><p>'
+    +(B.length?'Needs further investigation: '+esc(B.map(m=>m.name).join(', '))+'.':'Skip this match under this framework.')+'</p><p class="note">'+sub+'</p></div></div>';
+}
+function cardHTML(m,openMap){
+  const open=(m.key in openMap)?openMap[m.key]:(m.cls==='A'||m.cls==='B');
+  let s=CLS[m.cls];
+  if(m.cls==='A'&&m.warn) s+=', '+m.warn+(m.warn===1?' warning':' warnings');
+  const rows=m.checks.map(c=>{
+    let ic='\u2013',cls='in';
+    if(c.pass===true){ic='\u2713';cls='ok';}
+    else if(c.pass===false){ if(c.kind==='hard'){ic='\u2717';cls='no';} else {ic='!';cls='wr';} }
+    else if(c.kind!=='info'){ic='?';cls='wr';}
+    return '<div class="row"><span class="ic '+cls+'">'+ic+'</span><span>'+esc(c.label)+'<span class="req">'+esc(c.req)+(c.kind==='soft'?', preferred':'')+'</span></span><span class="val">'+esc(c.text)+'</span></div>';
+  }).join('');
+  const ol=oddsLine(m);
+  return '<details class="market" data-key="'+m.key+'"'+(open?' open':'')+'><summary><span class="rc '+CARD[m.cls]+'"></span><span class="mname">'+esc(m.name)+'</span><span class="mstat">'+esc(s)+'</span></summary>'
+    +(m.cls==='A'?'<div class="pick">Pick: '+esc(m.pick)+'</div>':'')
+    +'<div class="why">'+esc(why(m))+'</div>'
+    +(ol?'<div class="oddsline">'+esc(ol)+'</div>':'')
+    +'<div class="rows">'+rows+'</div></details>';
+}
+function tableHTML(){
+  const t=last.tbl;
+  const cols=[t.hAll,t.hv,t.aAll,t.av];
+  const defs=[
+    ['W-D-L',s=>s.w+'-'+s.d+'-'+s.l],
+    ['Goals for-against',s=>s.gf+'-'+s.ga],
+    ['Over 1.5',s=>s.o15+'/'+s.n],['Over 2.5',s=>s.o25+'/'+s.n],['Under 2.5',s=>s.u25+'/'+s.n],
+    ['BTTS Yes',s=>s.by+'/'+s.n],['BTTS No',s=>s.bn+'/'+s.n],
+    ['Scored',s=>s.sc+'/'+s.n],['Failed to score',s=>s.fts+'/'+s.n],['Clean sheets',s=>s.cs+'/'+s.n],
+    ['0-0, 1-0, 0-1',s=>s.low+'/'+s.n],['Unbeaten',s=>s.ub+'/'+s.n]
+  ];
+  let h='<table><tr><th></th><th>H all</th><th>H home</th><th>A all</th><th>A away</th></tr>';
+  defs.forEach(([n,f])=>{ h+='<tr><td>'+n+'</td>'+cols.map(c=>'<td>'+f(c)+'</td>').join('')+'</tr>'; });
+  return h+'</table><p class="note" style="margin-top:6px">H is the home team, A is the away team. Counts are out of matches used (up to 10). Venue columns use up to 10 matches.</p>';
+}
+function reportText(){
+  if(!last||!last.complete) return '';
+  const l=['SureKick Rulebook v2.0 report',last.hn+' v '+last.an+(last.comp?' | '+last.comp:'')+(last.ko?' | '+last.ko:'')];
+  l.push('Team news: '+NEWS.map((id,i)=>NEWSLABEL[i]+' = '+$(id).value).join('; '));
+  last.markets.forEach(m=>{
+    l.push('','== '+m.name+': '+CLS[m.cls]);
+    const w=why(m); if(w) l.push(w);
+    m.checks.forEach(c=>l.push((c.pass===true?'Pass':c.pass===false?'Fail':c.kind==='info'?'Info':'Unknown')+(c.kind==='soft'?' (preferred)':'')+': '+c.label+' '+c.text));
+    const o=oddsLine(m); if(o) l.push(o);
+  });
+  l.push('','Screening results are not guarantees. Missing data was not assumed.');
+  return l.join('\n');
+}
+function render(scroll){
+  if(!last){ $('out').innerHTML=''; $('save').disabled=true; return; }
+  const openMap={};
+  document.querySelectorAll('details.market').forEach(d=>{ openMap[d.dataset.key]=d.open; });
+  let html='';
+  if(last.complete){
+    finalize();
+    html+=bannerHTML();
+    if(last.notes.length) html+='<div>'+last.notes.map(n=>'<p class="note">'+esc(n)+'</p>').join('')+'</div>';
+    html+=last.markets.map(m=>cardHTML(m,openMap)).join('');
+    html+='<details class="plain"><summary><strong>Calculated statistics</strong></summary><div class="inner">'+tableHTML()+'</div></details>';
+    html+='<details class="plain"><summary><strong>Report text</strong></summary><div class="inner"><textarea id="rep" readonly style="min-height:160px"></textarea><div class="btns" style="margin-top:8px"><button class="small" id="cp">Copy report</button></div></div></details>';
+  } else {
+    html=bannerHTML();
+  }
+  $('out').innerHTML=html;
+  if(last.complete){
+    $('rep').value=reportText();
+    $('cp').addEventListener('click',()=>{
+      $('rep').select();
+      try{ navigator.clipboard.writeText($('rep').value); $('cp').textContent='Copied'; }
+      catch(e){ $('cp').textContent='Select and copy the text above'; }
+    });
+  }
+  $('save').disabled=!last.complete;
+  if(scroll) $('out').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ---------- inputs ---------- */
+(function buildOdds(){
+  let h='<span class="h">Market</span><span class="h">Odds</span><span class="h">Your est. %</span>';
+  MK.forEach(([k,n])=>{
+    h+='<span>'+n+'</span><input type="number" step="0.01" min="1" inputmode="decimal" id="od_'+k+'" aria-label="Decimal odds for '+n+'"><input type="number" step="1" min="1" max="100" inputmode="decimal" id="es_'+k+'" aria-label="Your probability estimate for '+n+'">';
+  });
+  $('oddsRows').innerHTML=h;
+  MK.forEach(([k])=>{ ['od_','es_'].forEach(p=>$(p+k).addEventListener('input',()=>{ if(last&&last.complete) render(false); })); });
+})();
+NEWS.forEach(id=>$(id).addEventListener('change',()=>{ if(last&&last.complete) render(false); }));
+document.querySelectorAll('textarea[data-count]').forEach(t=>{
+  t.addEventListener('input',()=>{ $(t.dataset.count).textContent=parse(t.value).length+' found'; });
+});
+$('go').addEventListener('click',()=>analyze());
+function setFields(v){
+  ['hAll','hVen','aAll','aVen'].forEach((id,i)=>{ $(id).value=v?v[i]:''; $(id).dispatchEvent(new Event('input')); });
+}
+$('reset').addEventListener('click',()=>{
+  ['homeName','awayName','comp','ko'].forEach(id=>$(id).value='');
+  setFields(null);
+  NEWS.forEach(id=>$(id).value='unknown');
+  MK.forEach(([k])=>{ $('od_'+k).value=''; $('es_'+k).value=''; });
+  last=null; render(false);
+  $('fstatus').innerHTML=''; $('fdata').innerHTML='';
+});
+$('ex').addEventListener('click',()=>{
+  $('homeName').value='Example FC'; $('awayName').value='Sample United';
+  setFields([
+    '2-1,3-0,1-1,2-2,0-2,3-1,2-0,1-2,4-1,2-1',
+    '2-1,3-0,2-2,1-1,3-1,2-0,4-1,1-2,2-1,3-2',
+    '1-2,2-2,0-1,3-1,1-1,2-3,1-0,2-1,0-2,1-3',
+    '1-2,2-2,0-2,1-1,2-3,1-3,0-1,2-1,1-0,2-4'
+  ]);
+});
+
+/* ---------- log ---------- */
+let log=(function(){ try{ const a=JSON.parse(localStorage.getItem('sk_log')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } })();
+function won(k,r){
+  const t=r.f+r.a;
+  switch(k){
+    case 'o15': return t>=2;
+    case 'o25': return t>=3;
+    case 'u25': return t<=2;
+    case 'by': return r.f>0&&r.a>0;
+    case 'bn': return !(r.f>0&&r.a>0);
+    case 'h': return r.f>r.a;
+    case 'a': return r.a>r.f;
+    case 'x1': return r.f>=r.a;
+    case 'x2': return r.a>=r.f;
+    default: return r.f!==r.a;
+  }
+}
+$('save').addEventListener('click',()=>{
+  if(!(last&&last.complete)) return;
+  const v={}; last.markets.forEach(m=>v[m.key]=m.cls);
+  log.unshift({id:Date.now(),date:new Date().toISOString().slice(0,10),home:last.hn,away:last.an,comp:last.comp,v,res:null});
+  renderLog();
+  $('logPanel').scrollIntoView({behavior:'smooth',block:'start'});
+});
+function renderLog(){
+  try{ localStorage.setItem('sk_log',JSON.stringify(log)); }catch(e){}
+  const done=log.filter(e=>e.res).length;
+  let sum='<table><tr><th>Market</th><th>Passed</th><th>Needs investigation</th></tr>';
+  MK.forEach(([k,n])=>{
+    const cell=c=>{
+      const es=log.filter(e=>e.res&&e.v[k]===c);
+      if(!es.length) return '-';
+      const w=es.filter(e=>won(k,e.res)).length;
+      return w+'/'+es.length+' ('+Math.round(100*w/es.length)+'%)';
+    };
+    sum+='<tr><td>'+n+'</td><td>'+cell('A')+'</td><td>'+cell('B')+'</td></tr>';
+  });
+  sum+='</table><p class="note" style="margin-top:6px">'+done+' of '+log.length+' saved matches have results. A few matches say little, so wait for a large sample before changing any threshold.</p>';
+  $('summary').innerHTML=log.length?sum:'';
+
+  $('log').innerHTML=log.length?log.map(e=>{
+    const shown=MK.filter(([k])=>e.v[k]==='A'||e.v[k]==='B');
+    const tags=shown.length?shown.map(([k,n])=>{
+      const c=CARD[e.v[k]];
+      const mark=e.res?(won(k,e.res)?' \u2713':' \u2717'):'';
+      return '<span class="tag"><span class="rc '+c+'"></span>'+n+mark+'</span>';
+    }).join(''):'<span class="note">No market passed or needed investigation.</span>';
+    const res=e.res
+      ? '<span>Final score '+e.res.f+'-'+e.res.a+'</span> <button class="small" data-act="edit" data-id="'+e.id+'">Change</button>'
+      : '<div class="setrow"><input type="text" id="res'+e.id+'" placeholder="2-1" aria-label="Final score, home goals first"><button class="small" data-act="set" data-id="'+e.id+'">Save score</button></div>';
+    return '<div class="entry"><div class="top"><strong>'+esc(e.home)+' v '+esc(e.away)+'</strong><span class="note" style="margin:0">'+esc(e.date)+'</span></div>'
+      +(e.comp?'<div class="note">'+esc(e.comp)+'</div>':'')+'<div class="tags">'+tags+'</div>'+res+' <button class="link" data-act="del" data-id="'+e.id+'">Delete</button></div>';
+  }).join(''):'<p class="empty">No matches saved yet. Analyze a match, then save it here.</p>';
+}
+$('log').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const id=+b.dataset.id; const en=log.find(x=>x.id===id); if(!en) return;
+  if(b.dataset.act==='del'){ log=log.filter(x=>x.id!==id); }
+  else if(b.dataset.act==='edit'){ en.res=null; }
+  else if(b.dataset.act==='set'){
+    const inp=$('res'+id); const p=parse(inp.value);
+    if(!p.length){ inp.classList.add('bad'); inp.focus(); return; }
+    en.res=p[0];
+  }
+  renderLog();
+});
+$('exp').addEventListener('click',()=>{
+  $('bk').value=JSON.stringify(log);
+  $('bk').select();
+  try{ navigator.clipboard.writeText($('bk').value); $('bkmsg').textContent='Backup created and copied. Paste it somewhere safe.'; }
+  catch(err){ $('bkmsg').textContent='Backup created. Copy the text above and keep it somewhere safe.'; }
+});
+$('imp').addEventListener('click',()=>{
+  try{
+    const arr=JSON.parse($('bk').value);
+    if(!Array.isArray(arr)) throw new Error('bad');
+    log=arr; renderLog(); $('bkmsg').textContent='Restored '+arr.length+' matches.';
+  }catch(err){ $('bkmsg').textContent='That text is not a valid backup. Paste the full backup text and try again.'; }
+});
+
+/* ---------- free data finder (football-data.org) ---------- */
+const FD_DEFAULT='https://api.football-data.org/v4';
+const COMPS=[['PL','Premier League'],['ELC','Championship'],['PD','La Liga'],['BL1','Bundesliga'],['SA','Serie A'],['FL1','Ligue 1'],['DED','Eredivisie'],['PPL','Primeira Liga'],['CL','Champions League'],['BSA','Brazilian Serie A'],['EC','European Championship'],['WC','World Cup']];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let fetching=false, lastCall=0, fixtures=[];
+
+$('compSel').innerHTML=COMPS.map(([c,n])=>'<option value="'+c+'">'+n+'</option>').join('');
+function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k)||''; localStorage.setItem(k,v); }catch(e){} return ''; }
+$('apiKey').value=store('sk_fd_key');
+$('proxy').value=store('sk_fd_proxy');
+$('apiKey').addEventListener('input',()=>store('sk_fd_key',$('apiKey').value.trim()));
+$('proxy').addEventListener('input',()=>store('sk_fd_proxy',$('proxy').value.trim()));
+
+async function fd(path){
+  const base=($('proxy').value.trim()||FD_DEFAULT).replace(/\/+$/,'');
+  const key=$('apiKey').value.trim();
+  if(!key) throw new Error('Paste your free API key first');
+  for(let attempt=0;attempt<2;attempt++){
+    const wait=lastCall+6300-Date.now();
+    if(wait>0) await sleep(wait);
+    lastCall=Date.now();
+    let res;
+    try{ res=await fetch(base+path,{headers:{'X-Auth-Token':key}}); }
+    catch(e){ throw new Error('The browser could not reach the data service. It may be blocked on this site, so try the proxy option'); }
+    if(res.status===429){ await sleep(20000); continue; }
+    if(res.status===401||res.status===403) throw new Error('Key rejected, or not included in the free plan');
+    if(!res.ok) throw new Error('Service returned '+res.status);
+    return res.json();
+  }
+  throw new Error('Rate limit reached. Wait a minute and try again');
+}
+const isoDay=n=>{ const d=new Date(Date.now()+n*864e5); return d.toISOString().slice(0,10); };
+
+function ftScore(m){
+  const s=m.score||{};
+  let r=s.fullTime, et=false;
+  if(s.duration&&s.duration!=='REGULAR'){ if(s.regularTime) r=s.regularTime; else et=true; }
+  if(!r||r.home==null||r.away==null) return null;
+  return {home:r.home,away:r.away,et};
+}
+function toResults(matches,teamId){
+  const out=[]; let et=0;
+  matches.forEach(m=>{
+    if(m.status!=='FINISHED') return;
+    const r=ftScore(m); if(!r) return;
+    if(r.et) et++;
+    const home=m.homeTeam.id===teamId;
+    const o=home?m.awayTeam:m.homeTeam;
+    out.push({id:m.id,date:String(m.utcDate).slice(0,10),opp:o.shortName||o.name||'',venue:home?'home':'away',gf:home?r.home:r.away,ga:home?r.away:r.home});
+  });
+  return {list:out,et};
+}
+async function teamResults(team,needVenue,seasonYear,notes){
+  const label=team.shortName||team.name;
+  const d=await fd('/teams/'+team.id+'/matches?status=FINISHED&limit=50');
+  let res=toResults(d.matches||[],team.id);
+  let list=res.list, et=res.et;
+  const enough=()=>list.length>=10&&list.filter(x=>x.venue===needVenue).length>=10;
+  if(!enough()&&seasonYear){
+    try{
+      const d2=await fd('/teams/'+team.id+'/matches?status=FINISHED&season='+(seasonYear-1)+'&limit=50');
+      const r2=toResults(d2.matches||[],team.id);
+      const have=new Set(list.map(x=>x.id));
+      list=list.concat(r2.list.filter(x=>!have.has(x.id))); et+=r2.et;
+    }catch(e){ notes.push(label+': earlier season results were not available.'); }
+  }
+  list.sort((a,b)=>b.date.localeCompare(a.date));
+  if(et) notes.push(label+': '+et+' match(es) went to extra time and may include extra-time goals.');
+  return list;
+}
+function fdataHTML(lists){
+  return lists.map(l=>'<details class="plain"><summary><strong>'+esc(l.label)+'</strong><span class="mstat" style="margin-left:auto">'+l.matches.length+' found</span></summary><div class="inner fl">'
+    +(l.matches.length?l.matches.map(m=>'<div><span>'+esc(m.date)+' '+esc(m.venue.charAt(0).toUpperCase())+'</span><span>'+esc(m.opp)+'</span><strong>'+m.gf+'-'+m.ga+'</strong></div>').join(''):'<p class="note">Nothing found.</p>')
+    +'</div></details>').join('');
+}
+const setStatus=(arr)=>{
+  const ICON={ok:'\u2713 ',bad:'\u2717 ',run:'\u2026 ',warn:'! '};
+  $('fstatus').innerHTML=arr.map(x=>'<li class="'+x.s+'">'+ICON[x.s]+esc(x.t)+'</li>').join('');
+};
+
+async function loadFixtures(){
+  if(fetching) return;
+  fetching=true; $('loadFx').disabled=true; $('find').disabled=true;
+  const st=[{t:'Loading upcoming matches',s:'run'}]; setStatus(st);
+  try{
+    const d=await fd('/competitions/'+$('compSel').value+'/matches?dateFrom='+isoDay(0)+'&dateTo='+isoDay(10));
+    fixtures=(d.matches||[]).filter(m=>m.status==='SCHEDULED'||m.status==='TIMED')
+      .sort((a,b)=>String(a.utcDate).localeCompare(String(b.utcDate)));
+    if(!fixtures.length){
+      setStatus([{t:'No upcoming matches in the next 10 days for this competition.',s:'warn'}]);
+      $('fxWrap').hidden=true; return;
+    }
+    $('fxSel').innerHTML=fixtures.map((m,i)=>{
+      const when=new Date(m.utcDate).toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      return '<option value="'+i+'">'+esc((m.homeTeam.shortName||m.homeTeam.name)+' v '+(m.awayTeam.shortName||m.awayTeam.name)+', '+when)+'</option>';
+    }).join('');
+    $('fxWrap').hidden=false; $('find').disabled=false;
+    setStatus([{t:fixtures.length+' upcoming matches found. Pick one below.',s:'ok'}]);
+  }catch(e){
+    setStatus([{t:e.message,s:'bad'}]);
+  }finally{
+    fetching=false; $('loadFx').disabled=false;
+  }
+}
+
+async function findAndAnalyze(){
+  if(fetching) return;
+  const m=fixtures[+$('fxSel').value];
+  if(!m){ setStatus([{t:'Show upcoming matches and pick one first.',s:'bad'}]); return; }
+  fetching=true; $('find').disabled=true; $('loadFx').disabled=true;
+  $('fdata').innerHTML='';
+  const H=m.homeTeam, A=m.awayTeam;
+  const hn=H.shortName||H.name, an=A.shortName||A.name;
+  $('homeName').value=hn; $('awayName').value=an;
+  $('comp').value=(m.competition&&m.competition.name)||$('compSel').selectedOptions[0].textContent;
+  $('ko').value=new Date(m.utcDate).toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const seasonYear=m.season&&m.season.startDate?+String(m.season.startDate).slice(0,4):null;
+  const st=[{t:'Finding '+hn+' results',s:'run'},{t:'Finding '+an+' results',s:'run'}];
+  setStatus(st);
+  const notes=['These results came from football-data.org. Spot-check them before relying on the screening.',
+    'Only matches from its 12 free competitions are included, so cup games and other competitions are missing.'];
+  try{
+    const lists=[];
+    const teams=[[H,hn,'home','hAll','hVen'],[A,an,'away','aAll','aVen']];
+    for(let i=0;i<2;i++){
+      const [team,name,venue,idAll,idVen]=teams[i];
+      try{
+        const list=await teamResults(team,venue,seasonYear,notes);
+        const all=list.slice(0,10), ven=list.filter(x=>x.venue===venue).slice(0,10);
+        $(idAll).value=all.map(x=>x.gf+'-'+x.ga).join(', ');
+        $(idVen).value=ven.map(x=>x.gf+'-'+x.ga).join(', ');
+        $(idAll).dispatchEvent(new Event('input')); $(idVen).dispatchEvent(new Event('input'));
+        lists.push({label:name+': last '+all.length+' overall',matches:all});
+        lists.push({label:name+': last '+ven.length+' '+venue,matches:ven});
+        const short=all.length<10||ven.length<10;
+        st[i]={t:name+': '+all.length+' overall, '+ven.length+' '+venue+' matches'+(short?' (fewer than 10)':''),s:short?'warn':'ok'};
+        if(short) notes.push(name+' has fewer than 10 results available, so checks needing 10 show Unknown.');
+      }catch(e){
+        st[i]={t:name+': '+e.message,s:'bad'};
+        notes.push(name+' could not be loaded. Enter results by hand if you have them.');
+      }
+      setStatus(st);
+    }
+    $('fdata').innerHTML=fdataHTML(lists);
+    notes.push('Team news and odds are not in the free data. Check them yourself and fill in the team news and odds boxes.');
+    analyze(notes);
+  }finally{
+    fetching=false; $('find').disabled=false; $('loadFx').disabled=false;
+  }
+}
+$('loadFx').addEventListener('click',loadFixtures);
+$('find').addEventListener('click',findAndAnalyze);
+
+renderLog();
+</script>
+</body>
+</html>
